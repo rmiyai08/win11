@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>共有チェックリスト</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        table { width: 80%; margin: auto; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        input[type="checkbox"] { transform: scale(1.5); }
+    </style>
+</head>
+<body>
+
+    <h1>共有チェックリスト</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>完了</th>
+                <th>作業内容</th>
+            </tr>
+        </thead>
+        <tbody id="checklistTable">
+            <!-- チェックリスト項目がここに入る -->
+        </tbody>
+    </table>
+
+    <script>
+        const dataUrl = "https://your-server.com/checklist.json";  // 共有データのURL
+
+        // ✅ チェックリストを取得して表示
+        async function loadChecklist() {
+            try {
+                const response = await fetch(dataUrl);
+                const checklist = await response.json();
+                renderChecklist(checklist);
+            } catch (error) {
+                console.error("🚨 データの取得エラー:", error);
+            }
+        }
+
+        // ✅ チェックリストを表示
+        function renderChecklist(checklist) {
+            const tbody = document.getElementById("checklistTable");
+            tbody.innerHTML = ""; // クリア
+
+            checklist.forEach((item, index) => {
+                const row = document.createElement("tr");
+
+                // ✅ チェックボックス
+                const checkboxCell = document.createElement("td");
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = item.checked;
+                checkbox.addEventListener("change", () => updateChecklist(index, checkbox.checked));
+                checkboxCell.appendChild(checkbox);
+                row.appendChild(checkboxCell);
+
+                // 📌 作業内容
+                const taskCell = document.createElement("td");
+                taskCell.textContent = item.task;
+                row.appendChild(taskCell);
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // ✅ チェックリストの状態を更新（サーバーに送信）
+        async function updateChecklist(index, checked) {
+            try {
+                const response = await fetch(dataUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ index, checked })
+                });
+                const result = await response.json();
+                console.log("✅ 更新完了:", result);
+            } catch (error) {
+                console.error("🚨 更新エラー:", error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadChecklist);
+    </script>
+
+</body>
+</html>
